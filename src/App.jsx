@@ -33,17 +33,36 @@ setModelHasLoaded(true);
     }
     setCommentInput('')
   }
+  function commentVerdict(){
+    let positive=comments.filter(comment=>comment.isNegative===false).length
+    let negative=comments.filter(comment=>comment.isNegative===true).length
+    if(!positive && !negative){
+      return
+    }
+    if(positive>negative){
+      setVerdict(`Your product has ${(positive/comments.length)*100}% of customer support!`)
+    }
+    else if(positive<negative){
+      setVerdict(`Your product has ${(negative/comments.length)*100}% of negative reviews you should work upon those and improve the product!`)
+    }
+    else{
+      setVerdict(`Your product has nearly the same amount of positive and negative feedback,you need to pay attention to it and correct the flaws!`)
+    }
+  }
  useEffect(() => {
 loadModel()
  }, [])
- 
+ useEffect(()=>{
+commentVerdict()
+ },[comments])
 
   return (
     <>
     <h1>Comment Analyzer</h1>
+    <h2>{verdict}</h2>
     <p>✅Positive Comments: {comments.filter(comment=>comment.isNegative===false).length}</p>
     <p>❌Negative Comments: {comments.filter(comment=>comment.isNegative===true).length}</p>
-    <p>{verdict}</p>
+    {/* <p>{verdict}</p> */}
    {comments?.map(
     (comment,idx)=>(
       <div key={idx} className='comment'>
@@ -61,7 +80,7 @@ loadModel()
       e.preventDefault()
       sendComment()
     }}>
-    <input type="text" value={commentInput} onChange={(e)=>setCommentInput(e.target.value)} placeholder='Enter your comment...'/>
+    <input type="text" value={commentInput} onChange={(e)=>setCommentInput(e.target.value)} placeholder='Enter your comment...' style={{padding:'0.5rem'}}/>
     <button type="submit">Send</button>
     </form>
     :
