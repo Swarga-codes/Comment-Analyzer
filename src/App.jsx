@@ -7,8 +7,6 @@ function App() {
   const [commentInput,setCommentInput]=useState("")
   const [comments,setComments]=useState([])
   const [modelHasLoaded,setModelHasLoaded]=useState(false)
-  const [positiveComments,setPositiveComments]=useState([])
-  const [negativeComments,setNegativeComments]=useState([])
   const [verdict,setVerdict]=useState("")
   const model=useRef(null)
   async function loadModel(){
@@ -27,12 +25,12 @@ setModelHasLoaded(true);
     const predictions=await model.current.classify([commentInput])
     const predictionsFilter=predictions.filter(prediction=>prediction.results[0].match===true) 
     if(predictionsFilter.length===0){
-    setPositiveComments([...positiveComments,commentInput])
+    setComments([...comments,{comment:commentInput,isNegative:false}])
     }
     else{
-      setNegativeComments([...negativeComments,{comment:commentInput,labels:predictionsFilter}])
+      const labels=predictionsFilter.map(prediction=>prediction.label)
+      setComments([...comments,{comment:commentInput,labels:labels,isNegative:true}])
     }
-    setComments([...comments,commentInput])
     setCommentInput('')
   }
  useEffect(() => {
@@ -43,12 +41,20 @@ loadModel()
   return (
     <>
     <h1>Comment Analyzer</h1>
-    <p>✅Positive Comments: {positiveComments.length}</p>
-    <p>❌Negative Comments: {negativeComments.length}</p>
+    <p>✅Positive Comments: {comments.filter(comment=>comment.isNegative===false).length}</p>
+    <p>❌Negative Comments: {comments.filter(comment=>comment.isNegative===true).length}</p>
     <p>{verdict}</p>
    {comments?.map(
     (comment,idx)=>(
-      <li key={idx}>{comment}</li>
+      <div key={idx} className='comment'>
+        <p>{comment.comment} {"  "}  {comment.isNegative === true && "(labels: "+comment.labels.map((label, index) => {
+        if (index !== comment.labels.length - 1) {
+          return label + ", ";
+        }
+        return label + ".)";
+      })}</p>
+       
+      </div>
     )
    )}
   {modelHasLoaded? <form onSubmit={(e)=>{
