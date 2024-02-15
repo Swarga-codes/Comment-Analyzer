@@ -22,6 +22,10 @@ setModelHasLoaded(true);
     if(!commentInput){
       return
     }
+    if(commentInput.includes('not good') || commentInput.includes('not up to the mark') || commentInput.includes('not upto mark') || commentInput.includes('not up to mark') || commentInput.includes('not upto the mark')){
+      setComments([...comments,{comment:commentInput,labels:['negative'],isNegative:true}])
+return 
+    }
     const predictions=await model.current.classify([commentInput])
     const predictionsFilter=predictions.filter(prediction=>prediction.results[0].match===true) 
     if(predictionsFilter.length===0){
