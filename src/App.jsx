@@ -2,7 +2,7 @@ import { useState,useEffect, useRef } from 'react'
 import '@tensorflow/tfjs'
 import {load} from '@tensorflow-models/toxicity'
 import './App.css'
-
+import edgeCaseComments from '../edgeCases'
 function App() {
   const [commentInput,setCommentInput]=useState("")
   const [comments,setComments]=useState([])
@@ -22,8 +22,11 @@ setModelHasLoaded(true);
     if(!commentInput){
       return
     }
-    if(commentInput.includes('not good') || commentInput.includes('not up to the mark') || commentInput.includes('not upto mark') || commentInput.includes('not up to mark') || commentInput.includes('not upto the mark')){
+    let edgeCases=edgeCaseComments.filter(edgeCaseComment=>commentInput.includes(edgeCaseComment)===true)
+    if(edgeCases.length>0){
       setComments([...comments,{comment:commentInput,labels:['negative'],isNegative:true}])
+    setCommentInput('')
+
 return 
     }
     const predictions=await model.current.classify([commentInput])
