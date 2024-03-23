@@ -1,4 +1,5 @@
 const edgeCaseComments = [
+    'bad',
     'not good',
     'not up to the mark',
     'not upto mark',
