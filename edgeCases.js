@@ -18,7 +18,7 @@ const edgeCaseComments = [
     'inferior',
     'unimpressive',
     'mediocre',
-    'awful'
+    'awful',
     'underwhelming',
     'not impressive',
     'could be better',
