@@ -3,9 +3,11 @@ import '@tensorflow/tfjs'
 import {load} from '@tensorflow-models/toxicity'
 import './App.css'
 import edgeCaseComments from '../edgeCases'
+import Sentiment from 'sentiment'
 function App() {
   const [commentInput,setCommentInput]=useState("")
   const [comments,setComments]=useState([])
+  const [neutralCount,setNeutralCount]=useState(0)
   const [modelHasLoaded,setModelHasLoaded]=useState(false)
   const [verdict,setVerdict]=useState("")
   const model=useRef(null)
@@ -41,20 +43,41 @@ return
     setCommentInput('')
   }
   function commentVerdict(){
-    let positive=comments.filter(comment=>comment.isNegative===false).length
-    let negative=comments.filter(comment=>comment.isNegative===true).length
+    let positive=comments?.filter(comment=>comment?.isNegative===false).length
+    let negative=comments?.filter(comment=>comment?.isNegative===true).length
     if(!positive && !negative){
       return
     }
     if(positive>negative){
-      setVerdict(`Your product has ${(positive/comments.length)*100}% of customer support!`)
+      setVerdict(`Your product has ${Math.floor((positive/comments.length)*100)}% of customer support!`)
     }
     else if(positive<negative){
-      setVerdict(`Your product has ${(negative/comments.length)*100}% of negative reviews you should work upon those and improve the product!`)
+      setVerdict(`Your product has ${Math.floor((negative/comments.length)*100)}% of negative reviews you should work upon those and improve the product!`)
     }
     else{
       setVerdict(`Your product has nearly the same amount of positive and negative feedback,you need to pay attention to it and correct the flaws!`)
     }
+  }
+  function analyseSentiment(){
+    if(!commentInput){
+      return
+    }
+    const analyse=new Sentiment()
+    const result=analyse.analyze(commentInput)
+    if(result.score>0){
+      console.log('Positive')
+    setComments([...comments,{comment:commentInput,isNegative:false}])
+    }
+    else if(result.score<0){
+      console.log('Negative')
+    setComments([...comments,{comment:commentInput,isNegative:true}])
+    }
+    else{
+      console.log('Neutral')
+    setComments([...comments,{comment:commentInput+" (neutral comment)"}])
+    setNeutralCount(neutralCount+1)
+    }
+    setCommentInput('')
   }
  useEffect(() => {
 loadModel()
@@ -69,23 +92,26 @@ commentVerdict()
     <h2>{verdict}</h2>
     <p>✅Positive Comments: {comments.filter(comment=>comment.isNegative===false).length}</p>
     <p>❌Negative Comments: {comments.filter(comment=>comment.isNegative===true).length}</p>
+    <p>😐Neutral Comments: {neutralCount}</p>
     {/* <p>{verdict}</p> */}
    {comments?.map(
     (comment,idx)=>(
       <div key={idx} className='comment'>
-        <p>{comment.comment} {"  "}  {comment.isNegative === true && "(labels: "+comment.labels.map((label, index) => {
+        {/* <p>{comment.comment} {"  "}  {comment.isNegative === true && "(labels: "+comment.labels.map((label, index) => {
         if (index !== comment.labels.length - 1) {
           return label + ", ";
         }
         return label + ".)";
       })}</p>
-       
+       */}
+<p>{comment.comment}</p>       
       </div>
     )
    )}
   {modelHasLoaded? <form onSubmit={(e)=>{
       e.preventDefault()
-      sendComment()
+      // sendComment()
+      analyseSentiment()
     }}>
     <input type="text" value={commentInput} onChange={(e)=>setCommentInput(e.target.value)} placeholder='Enter your comment...' style={{padding:'0.5rem'}}/>
     <button type="submit">Send</button>
