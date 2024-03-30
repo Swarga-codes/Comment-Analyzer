@@ -2,7 +2,7 @@ import { useState,useEffect, useRef } from 'react'
 import '@tensorflow/tfjs'
 import {load} from '@tensorflow-models/toxicity'
 import './App.css'
-import edgeCaseComments from '../edgeCases'
+
 import Sentiment from 'sentiment'
 function App() {
   const [commentInput,setCommentInput]=useState("")
@@ -23,13 +23,6 @@ setModelHasLoaded(true);
   async function sendComment(){
     if(!commentInput){
       return
-    }
-    let edgeCases=edgeCaseComments.filter(edgeCaseComment=>commentInput.includes(edgeCaseComment)===true)
-    if(edgeCases.length>0){
-      setComments([...comments,{comment:commentInput,labels:['negative'],isNegative:true}])
-    setCommentInput('')
-
-return 
     }
     const predictions=await model.current.classify([commentInput])
     const predictionsFilter=predictions.filter(prediction=>prediction.results[0].match===true) 
@@ -107,7 +100,8 @@ commentVerdict()
       </div>
     )
    )}
-  {modelHasLoaded? <form onSubmit={(e)=>{
+  
+   <form onSubmit={(e)=>{
       e.preventDefault()
       // sendComment()
       analyseSentiment()
@@ -115,10 +109,7 @@ commentVerdict()
     <input type="text" value={commentInput} onChange={(e)=>setCommentInput(e.target.value)} placeholder='Enter your comment...' style={{padding:'0.5rem'}}/>
     <button type="submit">Send</button>
     </form>
-    :
-    <p>Model is loading, please wait...</p>
-    }
-    </>
+  </>
   )
 }
 
