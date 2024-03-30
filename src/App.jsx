@@ -65,15 +65,14 @@ return
     const analyse=new Sentiment()
     const result=analyse.analyze(commentInput)
     if(result.score>0){
-      console.log('Positive')
-    setComments([...comments,{comment:commentInput,isNegative:false}])
+     
+    setComments([...comments,{comment:commentInput+" (positive comment)",isNegative:false}])
     }
     else if(result.score<0){
-      console.log('Negative')
-    setComments([...comments,{comment:commentInput,isNegative:true}])
+     
+    setComments([...comments,{comment:commentInput+" (negative comment)",isNegative:true}])
     }
     else{
-      console.log('Neutral')
     setComments([...comments,{comment:commentInput+" (neutral comment)"}])
     setNeutralCount(neutralCount+1)
     }
