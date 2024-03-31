@@ -67,7 +67,6 @@ async function analyseSentimentUsingBERT(){
   if(!commentInput){
     return 
   }
-  console.log('works')
   let pipe=await pipeline('sentiment-analysis')
 
   let res=await pipe(commentInput)
@@ -77,16 +76,17 @@ async function analyseSentimentUsingBERT(){
 async function analyseHybridResults(){
   const afinnResult=analyseSentimentUsingAFINN()
   const bertResult=await analyseSentimentUsingBERT()
-  if(afinnResult==='POSITIVE' || bertResult==='POSITIVE'){
+  if(afinnResult==='NEUTRAL'){
+    setComments([...comments,{comment:commentInput+" (neutral comment)"}])
+  setNeutralCount(neutralCount+1)
+}
+  else if((bertResult[0].label==='POSITIVE') || (bertResult[0].label==='POSITIVE' && Math.floor(bertResult[0].score)*100>90)){
     setComments([...comments,{comment:commentInput+" (positive comment)",isNegative:false}])
   }
-  else if(afinnResult==='NEGATIVE' || bertResult==='NEGATIVE'){
+  else if((bertResult[0].label==='NEGATIVE') || (bertResult[0].label==='NEGATIVE' && Math.floor(bertResult[0].score)*100>90)){
     setComments([...comments,{comment:commentInput+" (negative comment)",isNegative:true}])
   }
-  else{
-      setComments([...comments,{comment:commentInput+" (neutral comment)"}])
-    setNeutralCount(neutralCount+1)
-  }
+ 
   setCommentInput('')
 }
  useEffect(()=>{
