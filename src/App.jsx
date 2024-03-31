@@ -70,8 +70,8 @@ async function analyseSentimentUsingBERT(){
   console.log('works')
   let pipe=await pipeline('sentiment-analysis')
 
-  let res=await pipe('I love dogs')
-  // console.log(res.json())
+  let res=await pipe(commentInput)
+
  return res
 }
 async function analyseHybridResults(){
