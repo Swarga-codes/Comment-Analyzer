@@ -1,40 +1,31 @@
 import { useState,useEffect, useRef } from 'react'
-import '@tensorflow/tfjs'
-import {load} from '@tensorflow-models/toxicity'
 import './App.css'
-
+import { pipeline } from '@xenova/transformers'
+import { env } from '@xenova/transformers'
 import Sentiment from 'sentiment'
+env.localModelPath = import.meta.env.PUBLIC_URL + '/models/'
 function App() {
+
   const [commentInput,setCommentInput]=useState("")
   const [comments,setComments]=useState([])
   const [neutralCount,setNeutralCount]=useState(0)
-  const [modelHasLoaded,setModelHasLoaded]=useState(false)
   const [verdict,setVerdict]=useState("")
-  const model=useRef(null)
-  async function loadModel(){
-    // The minimum prediction confidence.
-const threshold = 0.9;
-// Set a state that indicates the model is being loaded...
-model.current = await load(threshold);
-setModelHasLoaded(true);
-// Set the state to false to let the user know that they can check the text
 
-  }
-  async function sendComment(){
-    if(!commentInput){
-      return
-    }
-    const predictions=await model.current.classify([commentInput])
-    const predictionsFilter=predictions.filter(prediction=>prediction.results[0].match===true) 
-    if(predictionsFilter.length===0){
-    setComments([...comments,{comment:commentInput,isNegative:false}])
-    }
-    else{
-      const labels=predictionsFilter.map(prediction=>prediction.label)
-      setComments([...comments,{comment:commentInput,labels:labels,isNegative:true}])
-    }
-    setCommentInput('')
-  }
+  // async function sendComment(){
+  //   if(!commentInput){
+  //     return
+  //   }
+  //   const predictions=await model.current.classify([commentInput])
+  //   const predictionsFilter=predictions.filter(prediction=>prediction.results[0].match===true) 
+  //   if(predictionsFilter.length===0){
+  //   setComments([...comments,{comment:commentInput,isNegative:false}])
+  //   }
+  //   else{
+  //     const labels=predictionsFilter.map(prediction=>prediction.label)
+  //     setComments([...comments,{comment:commentInput,labels:labels,isNegative:true}])
+  //   }
+  //   setCommentInput('')
+  // }
   function commentVerdict(){
     let positive=comments?.filter(comment=>comment?.isNegative===false).length
     let negative=comments?.filter(comment=>comment?.isNegative===true).length
@@ -51,29 +42,53 @@ setModelHasLoaded(true);
       setVerdict(`Your product has nearly the same amount of positive and negative feedback,you need to pay attention to it and correct the flaws!`)
     }
   }
-  function analyseSentiment(){
+  function analyseSentimentUsingAFINN(){
     if(!commentInput){
       return
     }
     const analyse=new Sentiment()
     const result=analyse.analyze(commentInput)
     if(result.score>0){
-     
-    setComments([...comments,{comment:commentInput+" (positive comment)",isNegative:false}])
+     return 'POSITIVE'
+    // setComments([...comments,{comment:commentInput+" (positive comment)",isNegative:false}])
     }
     else if(result.score<0){
+      return 'NEGATIVE'
      
-    setComments([...comments,{comment:commentInput+" (negative comment)",isNegative:true}])
+    // setComments([...comments,{comment:commentInput+" (negative comment)",isNegative:true}])
     }
     else{
-    setComments([...comments,{comment:commentInput+" (neutral comment)"}])
-    setNeutralCount(neutralCount+1)
+    // setComments([...comments,{comment:commentInput+" (neutral comment)"}])
+    // setNeutralCount(neutralCount+1)
+    return 'NEUTRAL'
     }
-    setCommentInput('')
   }
- useEffect(() => {
-loadModel()
- }, [])
+async function analyseSentimentUsingBERT(){
+  if(!commentInput){
+    return 
+  }
+  console.log('works')
+  let pipe=await pipeline('sentiment-analysis')
+
+  let res=await pipe('I love dogs')
+  // console.log(res.json())
+ return res
+}
+async function analyseHybridResults(){
+  const afinnResult=analyseSentimentUsingAFINN()
+  const bertResult=await analyseSentimentUsingBERT()
+  if(afinnResult==='POSITIVE' || bertResult==='POSITIVE'){
+    setComments([...comments,{comment:commentInput+" (positive comment)",isNegative:false}])
+  }
+  else if(afinnResult==='NEGATIVE' || bertResult==='NEGATIVE'){
+    setComments([...comments,{comment:commentInput+" (negative comment)",isNegative:true}])
+  }
+  else{
+      setComments([...comments,{comment:commentInput+" (neutral comment)"}])
+    setNeutralCount(neutralCount+1)
+  }
+  setCommentInput('')
+}
  useEffect(()=>{
 commentVerdict()
  },[comments])
@@ -101,10 +116,9 @@ commentVerdict()
     )
    )}
   
-   <form onSubmit={(e)=>{
+   <form onSubmit={async(e)=>{
       e.preventDefault()
-      // sendComment()
-      analyseSentiment()
+      await analyseHybridResults()
     }}>
     <input type="text" value={commentInput} onChange={(e)=>setCommentInput(e.target.value)} placeholder='Enter your comment...' style={{padding:'0.5rem'}}/>
     <button type="submit">Send</button>
